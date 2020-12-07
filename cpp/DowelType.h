@@ -18,15 +18,8 @@
 **                                                                    **
 ** ****************************************************************** */
 
-// $Revision: 1.0 $
-// $Date: 2020/10/26 00:00:00 $
-// $Source: /usr/local/cvs/OpenSees/PACKAGES/NewMaterial/cpp/DowelType.h,v $
-
-#ifndef DowelType_h
-#define DowelType_h
-
-// $Revision: 1.0 $
-// $Date: 2020/11/19 00:00:00 $
+// $Revision: 1.01 $
+// $Date: 2020/12/07 00:00:00 $
 // Written: Hanlin Dong, Tongji University, self@hanlindong.com
 //
 // Description: This file contains the class definition for DowelType.
@@ -37,10 +30,13 @@
 // 
 // Material definition tcl command:
 // uniaxialMaterial DowelType $tag
-// $Fi $Kp $Ru $c $beta $gamma $eta $Dy $alpha_p $alpha_u $alpha_r 
-// <-exponential $K0 $R1 $F0 $Dc $Kd <$Du> <$K0N $R1N $F0N $DcN $KdN $DuN> >
-// <-bezier $D1 $F1 $D2 $F2 $Dc $Fc $Kd <$Du> <$D1N $F1N $D2N $F2N $DcN $FcN $KdN $DuN>> >
-// <-piecewise $D1 $F1 $D2 $F2 $D3 $F3 <$D4 $F4 ...>>
+//     $Fi $Kp $Ru $c $beta $gamma $eta $Dy $alpha_p $alpha_u $alpha_r 
+//     <-exponential $K0 $R1 $F0 $Dc $Kd <$Du> <$K0N $R1N $F0N $DcN $KdN $DuN> >
+//     <-bezier $D1 $F1 $D2 $F2 $Dc $Fc $Kd <$Du> <$D1N $F1N $D2N $F2N $DcN $FcN $KdN $DuN>> >
+//     <-piecewise $D1 $F1 $D2 $F2 $D3 $F3 <$D4 $F4 ...>>
+
+#ifndef DowelType_h
+#define DowelType_h
 
 #include <UniaxialMaterial.h>
 
