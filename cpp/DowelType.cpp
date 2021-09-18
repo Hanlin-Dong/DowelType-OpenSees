@@ -82,8 +82,8 @@ OPS_DowelType()
     double dData[11];
     numData = 11;
     if (OPS_GetDoubleInput(&numData, dData) != 0) {
-        opserr << "ERROR: expected $Fi $Kp $Ru $beta $c ";
-        opserr << "$Dy $eta $alpha_p $alpha_u $alpha_r $gamma" << endln;
+        opserr << "ERROR: expected $Fi $Kp $Ru $c $gamma $eta";
+        opserr << "$Dy $alpha_p $alpha_u $alpha_r" << endln;
         return 0;
     }
 
@@ -93,7 +93,7 @@ OPS_DowelType()
         numData = OPS_GetNumRemainingInputArgs();
         double eData[12];
         if (OPS_GetDoubleInput(&numData, eData) != 0) {
-            opserr << "ERROR: expected exponential parameters: ";
+            opserr << "ERROR: expected exponential envelope parameters: ";
             opserr << "$K0 $R1 $F0 $Dc $Kd <$Du> <$K0N $R1N $F0N $DcN $KdN <$DuN>>" << endln;
             return 0;   
         }
@@ -120,7 +120,7 @@ OPS_DowelType()
             eData[5] = 0.;
             eData[11] = 0.;
         } else if (numData != 12) {
-            opserr << "ERROR: invailed number of args (5, 6, 10, or 12). Expected:";
+            opserr << "ERROR: invailed number of args (should be 5, 6, 10, or 12). Expected:";
             opserr << "$K0 $R1 $F0 $Dc $Kd <$Du> <$K0N $R1N $F0N $DcN $KdN <$DuN>>" << endln;
             return 0;
         }
@@ -134,9 +134,9 @@ OPS_DowelType()
         numData = OPS_GetNumRemainingInputArgs();
         double eData[16];
         if (OPS_GetDoubleInput(&numData, eData) != 0) {
-            opserr << "ERROR: expected Bezier parameters: ";
-            opserr << "$D1 $F1 $D2 $F2 $Dc $Fc $Kd <$Du> ";
-            opserr << "<$D1N $F1N $D2N $F2N $DcN $FcN $KdN <$DuN>>" << endln;
+            opserr << "ERROR: expected Bezier envelope parameters: ";
+            opserr << "$Db1 $Fb1 $Db2 $Fb2 $Dc $Fc <$Du> ";
+            opserr << "<$Db1N $Fb1N $Db2N $Fb2N $DcN $FcN $KdN <$DuN>>" << endln;
         }
         if (numData == 7) {
             eData[7] = 0.;
@@ -158,8 +158,8 @@ OPS_DowelType()
             }
             eData[7] = 0.;
         } else if (numData != 16) {
-            opserr << "ERROR: wrong number of args (7, 8, 14, or 16). Expected: ";
-            opserr << "$D1 $F1 $D2 $F2 $Dc $Fc $Kd <$Du> <$D1N $F1N $D2N $F2N $DcN $FcN $KdN <$DuN>>" << endln;
+            opserr << "ERROR: wrong number of args (should be 7, 8, 14, or 16). Expected: ";
+            opserr << "$Db1 $Fb1 $Db2 $Fb2 $Dc $Fc $Kd <$Du> <$Db1N $Fb1N $Db2N $Fb2N $DcN $FcN $KdN <$DuN>>" << endln;
             return 0;
         }
         theMaterial = new DowelType(tag, 
@@ -173,25 +173,28 @@ OPS_DowelType()
     } else if (strcmp(envstr, "-piecewise") == 0) {
         numData = OPS_GetNumRemainingInputArgs();
         if (numData < 6) {
-            opserr << "ERROR: expected number of points must be no less than 3." << endln;
+            opserr << "ERROR: piecewise envelope: number of definition points must be no less than 3. ";
+            opserr << "Expected: $D1 $F1 $D2 $F2 $D3 $F3 <$D4 $F4 ...>" << endln;
             return 0;
         }
         if (numData % 2 != 0) {
-            opserr << "ERROR: expected number of cooordinates must be even." << endln;
+            opserr << "ERROR: piecewise envelope: number of definition coordinates must be even. ";
+            opserr << "Expected: $D1 $F1 $D2 $F2 $D3 $F3 <$D4 $F4 ...>" << endln;
             return 0;
         }
         // maximum 20 points.
         if (numData > 40) {
-            opserr << "ERROR: too many interpolation points (expected <= 20)." << endln;
+            opserr << "ERROR: piecewise envelope: too many definition points (should be no more than 20 points). ";
+            opserr << "Expected: $D1 $F1 $D2 $F2 $D3 $F3 <$D4 $F4 ...>" << endln;
             return 0;
         }
         double * eData = new double[numData];
         if (OPS_GetDoubleInput(&numData, eData) != 0) {
-            opserr << "ERROR: expected piece-wise parameters: ";
-            opserr << "$D1 $F1 $D2 $F2 $D3 $F3 <$D4 $F4 ...>" << endln;
+            opserr << "ERROR: piecewise envelope: cannot read coordinates.  ";
+            opserr << "Expected: $D1 $F1 $D2 $F2 $D3 $F3 <$D4 $F4 ...>" << endln;
             return 0;
         }
-        bool hasNeg = false;  // has negative point definations
+        bool hasNeg = false;  // has negative displacement definition
         for (int i = 0; i < numData; i += 2) {
             if (eData[i] < 0) {
                 hasNeg = true;
@@ -241,7 +244,7 @@ OPS_DowelType()
                     dData[7], dData[8], dData[9], dData[10],
                     size, dCoords, fCoords);
     } else {
-        opserr << "ERROR: envelope type expected: -exponential, -bezier or -piecewise" << endln;
+        opserr << "ERROR: unsupported envelope type. Expected: -exponential, -bezier or -piecewise" << endln;
         return 0;
     }
 
@@ -495,16 +498,16 @@ double DowelType::envelope(double disp)
     double force;
     if (envType == 1) {
         force = 
-            disp < dult_n ? 0.0 : 
+            disp < dult_n ? PRECISION : 
             disp < dcap_n ? fcap_n - kdesc_n * (disp - dcap_n) :
             disp < 0.0    ? (f0_n + k1_n * disp) * (1 - exp(-k0_n * disp / f0_n)) :
             disp < dcap_p ? (f0_p + k1_p * disp) * (1 - exp(-k0_p * disp / f0_p)) :
             disp < dult_p ? fcap_p - kdesc_p * (disp - dcap_p) :
-                            0.0;
+                            PRECISION;
     } else if (envType == 2) {
         // double k; // fake k
         force = 
-            disp < dult_n     ? 0.0 :
+            disp < dult_n     ? PRECISION :
             disp < dcap_n     ? fcap_n - kdesc_n * (disp - dcap_n) :
             disp < 0.0        ? getBezierYK(0.0, denv1_n, denv2_n, dcap_n,
                                             0.0, fenv1_n, fenv2_n, fcap_n,
@@ -513,13 +516,13 @@ double DowelType::envelope(double disp)
                                             0.0, fenv1_p, fenv2_p, fcap_p,
                                             disp, 0) :
             disp <= dult_p     ? fcap_p - kdesc_p * (disp - dcap_p) :
-                                0.0;
+                                PRECISION;
     } else if (envType == 3) {
         if (disp < denvs[0] || disp > denvs[envSize-1]) {
-            force = 0.0;
+            force = PRECISION;
         } else {
             for (int i = 1; i < envSize; i++) {
-                if (disp < denvs[i]) {
+                if (disp <= denvs[i]) {
                     force = (fenvs[i] - fenvs[i-1]) / (denvs[i] - denvs[i-1]) * 
                             (disp - denvs[i-1]) + fenvs[i-1];
                     break;
@@ -535,18 +538,18 @@ double DowelType::denvelope(double disp)
     double tangent;
     if (envType == 1) {
         tangent = 
-            disp < dult_n ? 0.0 :
+            disp < dult_n ? -kdesc_n :
             disp < dcap_n ? -kdesc_n :
             disp < 0.0    ? k1_n + ((k0_n - k1_n) + (disp * k0_n * k1_n) / f0_n) * 
                             exp(-k0_n * disp / f0_n) :
             disp < dcap_p ? k1_p + ((k0_p - k1_p) + (disp * k0_p * k1_p) / f0_p) * 
                             exp(-k0_p * disp / f0_p) :
             disp <= dult_p ? -kdesc_p :
-                            0.0;
+                            -kdesc_p;
     } else if (envType == 2) {
         // double f; // fake f
         tangent = 
-            disp < dult_n ? 0.0 :
+            disp < dult_n ? -kdesc_n :
             disp < dcap_n ? -kdesc_n :
             disp < 0.0    ? getBezierYK(0.0, denv1_n, denv2_n, dcap_n,
                                         0.0, fenv1_n, fenv2_n, fcap_n,
@@ -555,13 +558,13 @@ double DowelType::denvelope(double disp)
                                         0.0, fenv1_p, fenv2_p, fcap_p,
                                         disp, 0, false) :
             disp <= dult_p ? -kdesc_p :
-                            0.0;
+                            -kdesc_p;
     } else if (envType == 3) {
         if (disp < denvs[0] || disp > denvs[envSize-1]) {
-            tangent = 0.0;
+            return 0.0;
         } else {
             for (int i = 0; i < envSize; i++) {
-                if (disp < denvs[i]) {
+                if (disp <= denvs[i]) {
                     tangent = (fenvs[i] - fenvs[i-1]) / (denvs[i] - denvs[i-1]);
                     break;
                 }
@@ -571,6 +574,7 @@ double DowelType::denvelope(double disp)
     return tangent;
 }
 
+// solver the intersection of the envelope and a line. Provide tangent and intercept.
 double DowelType::envIntersection(double k, double b)
 {
     double xm = 0.0;
@@ -585,7 +589,7 @@ double DowelType::envIntersection(double k, double b)
         double y0 = envelope(x0) - (k * x0 + b);
         double y1 = envelope(x1) - (k * x1 + b);
         while (y0 * y1 > 0 && x1 <= dcap_p && x1 >= dcap_n) {
-            if (DEBUG) opserr << "translate: x0="<<x0<<" x1="<<x1<< " y0="<<y0<<" y1="<<y1<<endln;
+            if (DEBUG) opserr << "envIntersection: translate x0=" << x0 << " x1=" << x1 << " y0=" << y0 << " y1=" << y1 <<endln;
             y0 = y1;
             x0 = x1;
             x1 += offset;
@@ -596,14 +600,14 @@ double DowelType::envIntersection(double k, double b)
         } else if (fabs(y1) <= PRECISION) {
             return x1;
         } else if (y0 * y1 > 0) {
-            opserr << "ERROR: Pinching path has no intersection with envelope." << endln;
+            opserr << "ERROR: Pinching path has no intersection with envelope. Check definition." << endln;
             tPath = 4;
             return 0.0;
         }
         double ym;
         int count = 0;
         while (count < 2000) {
-            if (DEBUG) opserr <<"iteration x0="<<x0<<" x1="<<x1<<" xm="<<xm<<endln;
+            if (DEBUG) opserr << "envIntersection: iteration x0=" << x0 << " x1=" << x1 << " xm=" << xm << endln;
             xm = x0 - y0 * (x0 - x1) / (y0 - y1);
             ym = envelope(xm) - (k * xm + b);
             if (fabs(ym) < PRECISION || fabs(x1 - x0) < PRECISION) {
@@ -617,8 +621,8 @@ double DowelType::envIntersection(double k, double b)
             }
             count ++;
         }
-        if (count == 2000) {
-            opserr << "ERROR: too many iterations when solving intersection" << endln;
+        if (count >= 2000) {
+            opserr << "ERROR: too many iterations when solving envelope and pinching line intersection. Check definitions." << endln;
             tPath = 4;
             return 0.0;
         }
@@ -645,6 +649,7 @@ double DowelType::envIntersection(double k, double b)
     return xm;
 }
 
+// get a point on the envelope with a specific tangent value.
 double DowelType::envWithSlope(double k, bool flag, double xinit)
 {
     if (denvelope(xinit) < k) {
@@ -668,13 +673,13 @@ double DowelType::envWithSlope(double k, bool flag, double xinit)
         } else if (fabs(y1) <= PRECISION) {
             return x1;
         } else if (y0 * y1 > 0) {
-            opserr << "ERROR: reloading stiffness is too small." << endln;
+            opserr << "ERROR: envWithSlope: reloading stiffness is too small." << endln;
             return x0;
         }
         double ym;
         int count = 0;
         while (count < 2000) {
-            if (DEBUG) opserr <<"iteration x0="<<x0<<" x1="<<x1<<" xm="<<xm<<endln;
+            if (DEBUG) opserr << "envWithSlope: iteration x0=" << x0 << " x1=" << x1 << " xm=" << xm << endln;
             xm = x0 - y0 * (x0 - x1) / (y0 - y1);
             ym = envelope(xm) - k;
             if (fabs(ym) < PRECISION || fabs(x1 - x0) < PRECISION) {
@@ -689,7 +694,7 @@ double DowelType::envWithSlope(double k, bool flag, double xinit)
             count ++;
         }
         if (count == 2000) {
-            opserr << "WARNING: too many iterations when solving envelope slope" << endln;
+            opserr << "WARNING: too many iterations when solving envelope point with a specific slope. Check the definition." << endln;
         }
     } else if (envType == 3) {
         int target = envZero;
@@ -709,7 +714,7 @@ double DowelType::envWithSlope(double k, bool flag, double xinit)
     return xm;
 }
 
-
+// Given a x, get the y and k on the reverse pinched path.
 void DowelType::getReverseYK(double x, bool flag, double *y, double *k)
 {
     int dt = flag ? 0 : 10;  // index offset for Bezier points
@@ -751,10 +756,13 @@ void DowelType::getReverseYK(double x, bool flag, double *y, double *k)
     }
 }
 
+// reset the reverse path control points when loading history is changed.
 void DowelType::resetReversePoints(double disp, double force, bool flag)
 {
     // flag: go right to left, true. go left to right, false.
     double dpeak = flag ? cDmin : cDmax; // peak disp on the opposite side
+    double dmaxs = flag ? cDmax : cDmin; // maximum disp of the same side
+    double force_dmaxs = envelope(dmaxs); // force corresponding to the maximum disp of the same side
     double dmax0 = flag ? cDmax : -cDmin; // absolute maximum disp of the same side
     double dmax1 = flag ? -cDmin : cDmax; // absolute maximum disp of the other side 
     double dmax = cDmax > -cDmin ? cDmax : -cDmin;
@@ -785,10 +793,10 @@ void DowelType::resetReversePoints(double disp, double force, bool flag)
     if (DEBUG) opserr << "ax=" << ax << " ay=" << ay << " ak=" << ak << endln;
     // M: pinch line controlling point: force intercept.
     mx = 0.0;
-    my = flag ? disp > dyield ? fb - eta * (force - fyield_p) : fb :
-                disp < -dyield ? fb - eta * (force - fyield_n) : fb;
+    my = flag ? dmaxs > dyield ? fb - eta * (force_dmaxs - fyield_p) : (dmaxs / fyield_p）* fb :
+                dmaxs < -dyield ? fb - eta * (force_dmaxs - fyield_n) : (dmaxs / fyield_n）* fb;
     mk = alpha_p >= 0 ? dmax <= dyield ? kp :  kp * pow(dyield / dmax, alpha_p):
-                       fabs(disp) > DBL_EPSILON ? kp * pow(force / disp / k0, -alpha_p): kp;
+                       fabs(dmaxs) > DBL_EPSILON ? kp * pow(force_dmaxs / dmaxs / k0, -alpha_p): kp;
     if (DEBUG) opserr << "mx=" << mx << " my=" << my << " mk=" << mk << endln;
     // D: reloading line and envelope intersection
     double energyAmp = pow(gamma, dmg);
@@ -796,12 +804,13 @@ void DowelType::resetReversePoints(double disp, double force, bool flag)
     if (DEBUG) opserr << "dmg=" << dmg <<", energyAmp=" << energyAmp << endln;
     dx = dpeak * beta * energyAmp;
     dy = envelope(dx);
-    dk = alpha_r >= 0 ? dmax1 < DBL_EPSILON ? 0.1 / DBL_EPSILON : k01 * pow(dyield / dmax1, alpha_r):
-                        dmax1 < DBL_EPSILON ? k01 : k01 * pow(force / disp / k01, -alpha_r);
+    dk = alpha_r >= 0 ? dmax1 <= dyield ? k01 : k01 * pow(dyield / dmax1, alpha_r):
+                        dmax1 < DBL_EPSILON ? k01 : k01 * pow(force_dmaxs / dmaxs / k01, -alpha_r);
     if (DEBUG) opserr << "dx=" << dx << " dy="<<dy<< " dk=" << dk << endln;
     // solve B from A and M (intersection)
     bx = ((my - mk * mx) - (ay - ak * ax)) / (ak - mk);
     by = mk * (bx - mx) + my;
+    // solve C from D and M (intersection)
     cx = ((my - mk * mx) - (dy - dk * dx)) / (dk - mk);
     cy = mk * (cx - mx) + my;
     if (DEBUG) opserr << "bx=" << bx << " by="<<by<< " cx=" << cx << " cy="<< cy << endln;
@@ -830,6 +839,7 @@ void DowelType::resetReversePoints(double disp, double force, bool flag)
                 cy = mk * -mx + my;
                 pinching2env = true;
             } 
+            if (DEBUG) opserr << "WenMing" << " disp=" << disp << " dx=" << x << " my=" << my << endln;
         }
         nx = (bx + cx) / 2;
         ny = (by + cy) / 2;
@@ -927,7 +937,7 @@ void DowelType::resetReversePoints(double disp, double force, bool flag)
     }
 
     if (pinching2env) {
-        if (DEBUG) opserr << "Reloading special scenario" << endln;
+        if (DEBUG) opserr << "Reloading special scenario: pinching to envelope." << endln;
         pxs[5+dt] = nx;
         pxs[6+dt] = cx;
         pxs[7+dt] = 0;
@@ -942,7 +952,7 @@ void DowelType::resetReversePoints(double disp, double force, bool flag)
         pys[8+dt] = dy;
     }
     if (DEBUG) for (int i = 0; i < 20; i++) {
-        opserr << i <<" control px=" << pxs[i] << " py=" << pys[i] << endln;
+        opserr << "resetReversePoints:\nNo. " << i <<" px=" << pxs[i] << " py=" << pys[i] << endln;
     }
 }
 
@@ -962,7 +972,7 @@ int DowelType::setTrialStrain(double strain, double strainRate)
         // material fail.
         if (DEBUG) opserr << "scenario 4" << endln;
         tStress = 0.0;
-        tTangent = 0.0;
+        tTangent = PRECISION;
         tPath = 4;
     } 
     else if (cPath == 1)
