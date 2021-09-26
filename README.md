@@ -79,5 +79,5 @@ NOTES
 2. See `test` folder for material definition and its corresponding hysteresis.
 3. Hysteretic law definition and the equations are shown in the following figures.
 
-![](figs/doc.png)
+![](figs/doc.svg)
 ![](figs/eqn.png)

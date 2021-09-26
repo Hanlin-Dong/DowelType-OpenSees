@@ -1,11 +1,11 @@
 
-\documentclass[12pt, landscape]{article}
-\usepackage[left=0.5cm, right=1cm, top=0.5cm, bottom=0.5cm]{geometry}
+\documentclass[12pt]{article}
+\usepackage[left=2cm, right=2cm, top=0.5cm, bottom=0.5cm]{geometry}
 \usepackage{amsmath}
 
 \begin{document}
-\begin{minipage}[t]{0.48\textwidth}
-\textbf{Expression of the exponential envelope curve}
+% \begin{minipage}[t]{0.48\textwidth}
+\section{Expression of the exponential envelope curve}
 \begin{equation}
 F_{\mathrm{env}}(D) = 
 \begin{cases}
@@ -15,18 +15,19 @@ F_c - K_d (D-D_c), & D_c < D \leq D_u \\
 \end{cases}
 \end{equation}
 
-\textbf{Expression of the force intercept of the pinching line}
+\section{Expression of the force intercept of the pinching line}
 \begin{equation}
-F_{\mathrm{intercept}} = 
+F_{\mathrm{int}} = 
 \begin{cases}
-\left(\frac{D_{un}}{D_y}\right) F_{I},  & \lvert D_{un} \rvert \leq D_y  \ \mathrm{and} \  \lvert D_{m,s}\rvert \leq D_y \\ 
-F_{I},  & \lvert D_{un} \rvert \leq D_y \ \mathrm{and} \lvert D_{m,s} \rvert > D_y \\ 
-F_{I} + \eta(F_{un}-F_y), & \lvert D_{un} \rvert > D_y 
+\left(\frac{\lvert D_{m,s} \rvert}{D_y}\right) F_{I},  & \lvert D_{m,s} \rvert \leq D_y \\ 
+F_{I},  &  \lvert D_{m,s} \rvert > D_y \ \mathrm{and} \ \lvert F_{env}(D_{m,s}) \rvert \leq \lvert F_{env}(D_{y,s}) \rvert  \\ 
+F_{I} - \eta\left(F_{env}(D_{m,s})-F_{env}(D_{y,s})\right), & \lvert D_{m,s} \rvert > D_y \ \mathrm{and} \ \lvert F_{env}(D_{m,s}) \rvert > \lvert F_{env}(D_{y,s}) \rvert 
 \end{cases}
 \end{equation}
-where $(D_{un}, F_{un})$ are the coordinates of the unloading point, and $D_{m,s}$ is the maximum displacement on the same side.
+where $D_{m,s}$ is the \textbf{m}aximum displacement on the \textbf{s}ame side of the unloading point.
+$D_{y,s}$ is the \textbf{y}ielding displacement on the \textbf{s}ame side of the unloading point.
 
-\textbf{Expressions of the target displacement of the reloading curve}
+\section{Expressions of the target displacement of the reloading curve}
 \begin{equation}
     D_{\mathrm{tar}} = \beta\gamma^{\lambda}D_{m,o}
 \end{equation}
@@ -35,34 +36,36 @@ where $(D_{un}, F_{un})$ are the coordinates of the unloading point, and $D_{m,s
 \lambda = \frac{\Sigma E_{p,i} + \Sigma E_i}{E_f + \Sigma E_i}
 \end{equation}
 where $E_{p,i}$ is the energy dissipated in a primary half-cycle, $E_i$ is the energy dissipated in the follower half-cycles, and $E_f$ is the energy dissipated in a monotonic test to failure. 
-\end{minipage}
-\begin{minipage}[t]{0.04\textwidth}
-\end{minipage}
-\begin{minipage}[t]{0.48\textwidth}
-\textbf{Expressions of stiffness degradation}
+
+%
+% \end{minipage}
+% \begin{minipage}[t]{0.04\textwidth}
+% \end{minipage}
+% \begin{minipage}[t]{0.48\textwidth}
+\section{Expressions of stiffness degradation}
 \begin{equation}
 K_{\mathrm{pinching}} = \begin{cases}
-K_{p}, & \alpha \geq 0 \ \mathrm{and} \ D_m \leq D_y \\ 
-K_{p}\left(\frac{D_y}{D_m}\right)^{\alpha_p}, & \alpha \geq 0 \ \mathrm{and} \ D_m > D_y \\ 
-K_{p}\left(\frac{F_{un}}{D_{un}K_{0,s}}\right)^{\lvert\alpha_p\rvert}, & \alpha < 0
+K_{p}, & \alpha_p \geq 0 \ \mathrm{and} \ D_m \leq D_y \\ 
+K_{p}\left(\frac{D_y}{D_m}\right)^{\alpha_p}, & \alpha_p \geq 0 \ \mathrm{and} \ D_m > D_y \\ 
+K_{p}\left(\frac{F_{env}(D_{m,s})}{D_{m,s}K_{0,s}}\right)^{\lvert\alpha_p\rvert}, & \alpha_p < 0
 \end{cases}
 \end{equation}
 
 \begin{equation}
 K_{\mathrm{unloading}} = \begin{cases}
 R_uK_{0,s}, & \alpha_u \geq 0 \ \mathrm{and} \ \lvert D_{m,s}\rvert \leq D_y \\
-R_uK_{0,s} \left(\frac{D_y}{\lvert D_{m,s}\rvert}\right)^{\alpha_u}, & \alpha_u \geq 0 \ \mathrm{and} \ \lvert D_{m,s}\rvert \leq D_y \\
-R_u \left(\frac{F_{un}}{D_{un}K_{0,s}}\right)^{\lvert\alpha_u\rvert}, & \alpha_u < 0
+R_uK_{0,s} \left(\frac{D_y}{\lvert D_{m,s}\rvert}\right)^{\alpha_u}, & \alpha_u \geq 0 \ \mathrm{and} \ \lvert D_{m,s}\rvert > D_y \\
+R_uK_{0,s} \left(\frac{F_{env}(D_{m,s})}{D_{m,s}K_{0,s}}\right)^{\lvert\alpha_u\rvert}, & \alpha_u < 0
 \end{cases}
 \end{equation}
 
 \begin{equation}
 K_{\mathrm{reloading}} = \begin{cases}
 K_{0,o}, & \alpha_r \geq 0 \ \mathrm{and} \ \lvert D_{m,o}\rvert \leq D_y \\
-K_{0,o} \left(\frac{D_y}{\lvert D_{m,o}\rvert}\right)^{\alpha_u}, & \alpha_u \geq 0 \ \mathrm{and} \ \lvert D_{m,o}\rvert \leq D_y \\
-\left(\frac{F_{un}}{D_{un}}\right)^{\lvert\alpha_r\rvert}, & \alpha_r < 0
+K_{0,o} \left(\frac{D_y}{\lvert D_{m,o}\rvert}\right)^{\alpha_r}, & \alpha_r \geq 0 \ \mathrm{and} \ \lvert D_{m,o}\rvert > D_y \\
+K_{0,o} \left(\frac{F_{env}(D_{m,s})}{D_{m,s}K_{0,s}}\right)^{\lvert\alpha_r\rvert}, & \alpha_r < 0
 \end{cases}
 \end{equation}
 where $K_{0,s}$ and $K_{0,o}$ are the stiffness on the same and opposite side of the unloading point, respectively. $D_{m,s}$ and $D_{m,o}$ are the maximum or minimum displacement on the same and opposite side of the unloading point, respectively. 
-\end{minipage}
+% \end{minipage}
 \end{document}
