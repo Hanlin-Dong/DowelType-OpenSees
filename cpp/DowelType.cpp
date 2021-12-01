@@ -18,9 +18,9 @@
 **                                                                    **
 ** ****************************************************************** */
 
-// $Revision: 1.01 $
+// $Revision: 1.02 $
 // $Date: 2020/12/07 00:00:00 $
-// Written: Hanlin Dong, Tongji University, self@hanlindong.com
+// Written: Hanlin Dong, Xijun Wang, Tongji University, self@hanlindong.com
 //
 // Description: This file contains the class definition for DowelType.
 // DowelType provides the abstraction of a dowel-type timber joint, including nails, screws, and bolts.
@@ -53,8 +53,10 @@
 
 #define PRECISION 1.0e-12
 #define PI 3.14159265358979323846
-
+#define MAX_ITER 2000
 #define DEBUG false
+
+#define MAT_TAG_DowelType 0
 
 static int numDowelType = 0;
 
@@ -62,8 +64,8 @@ OPS_Export void *
 OPS_DowelType()
 {
     if (numDowelType == 0) {
-        opserr << "DowelType - Written by Hanlin Dong (self@hanlindong.com) ";
-        opserr << "from Tongji University, Copyright 2020 - Use at your Own Peril" << endln;
+        opserr << "DowelType v1.02 - Written by Hanlin Dong (self@hanlindong.com) and Xijun Wang";
+        opserr << "from Tongji University, Copyright 2021 - Use at your Own Peril" << endln;
         numDowelType = 1;
     }
     UniaxialMaterial *theMaterial = 0;
@@ -135,7 +137,7 @@ OPS_DowelType()
         double eData[16];
         if (OPS_GetDoubleInput(&numData, eData) != 0) {
             opserr << "ERROR: expected Bezier envelope parameters: ";
-            opserr << "$Db1 $Fb1 $Db2 $Fb2 $Dc $Fc <$Du> ";
+            opserr << "$Db1 $Fb1 $Db2 $Fb2 $Dc $Fc $Kd <$Du> ";
             opserr << "<$Db1N $Fb1N $Db2N $Fb2N $DcN $FcN $KdN <$DuN>>" << endln;
         }
         if (numData == 7) {
@@ -264,7 +266,7 @@ DowelType::DowelType(int tag,
                 double Dy, double Ap, double Au, double Ar, 
                 double K0_p, double R1_p, double F0_p, double Dc_p, double Kd_p, double Du_p,
                 double K0_n, double R1_n, double F0_n, double Dc_n, double Kd_n, double Du_n):
-UniaxialMaterial(tag, 0), 
+UniaxialMaterial(tag, MAT_TAG_DowelType), 
 fi(Fi), kp(Kp), ru(Ru), c(c),
 beta(beta), gamma(gamma), eta(eta),
 dyield(Dy), alpha_p(Ap), alpha_u(Au), alpha_r(Ar),
@@ -315,7 +317,7 @@ DowelType::DowelType(int tag,
                 double Dc_p, double Fc_p, double Kd_p, double Du_p,
                 double D1_n, double F1_n, double D2_n, double F2_n,
                 double Dc_n, double Fc_n, double Kd_n, double Du_n):
-UniaxialMaterial(tag, 0), 
+UniaxialMaterial(tag, MAT_TAG_DowelType), 
 fi(Fi), kp(Kp), ru(Ru), c(c),
 beta(beta), gamma(gamma), eta(eta),
 dyield(Dy), alpha_p(Ap), alpha_u(Au), alpha_r(Ar),
@@ -384,7 +386,7 @@ DowelType::DowelType(int tag,
                 double beta, double gamma, double eta,
                 double Dy, double Ap, double Au, double Ar, 
                 int Size, double *Denvs, double *Fenvs):
-UniaxialMaterial(tag, 0), 
+UniaxialMaterial(tag, MAT_TAG_DowelType), 
 fi(Fi), kp(Kp), ru(Ru), c(c),
 beta(beta), gamma(gamma), eta(eta),
 dyield(Dy), alpha_p(Ap), alpha_u(Au), alpha_r(Ar),
@@ -454,7 +456,7 @@ cPath(1), cDmin(0.0), cFdmin(0.0), cDmax(0.0), cFdmax(0.0)
 
 
 DowelType::DowelType():
-UniaxialMaterial(0, 0), 
+UniaxialMaterial(0, MAT_TAG_DowelType), 
 fi(0.0), kp(0.0), ru(0.0), c(0.0),
 beta(0.0), gamma(0.0), eta(0.0),
 dyield(0.0), alpha_p(0.0), alpha_u(0.0), alpha_r(0.0),
@@ -607,7 +609,7 @@ double DowelType::envIntersection(double k, double b)
         }
         double ym;
         int count = 0;
-        while (count < 2000) {
+        while (count < MAX_ITER) {
             if (DEBUG) opserr << "envIntersection: iteration x0=" << x0 << " x1=" << x1 << " xm=" << xm << endln;
             xm = x0 - y0 * (x0 - x1) / (y0 - y1);
             ym = envelope(xm) - (k * xm + b);
@@ -622,7 +624,7 @@ double DowelType::envIntersection(double k, double b)
             }
             count ++;
         }
-        if (count >= 2000) {
+        if (count >= MAX_ITER) {
             opserr << "ERROR: too many iterations when solving envelope and pinching line intersection. Check definitions." << endln;
             tPath = 4;
             return 0.0;
@@ -674,12 +676,12 @@ double DowelType::envWithSlope(double k, bool flag, double xinit)
             return x1;
         } else if (x0 > dcap_n || x0 < dcap_p) {
             x0 = flag ? dcap_n : dcap_p; 
-            opserr << "envWithSlope: reloading stiffness is too small." << endln;
+            if (DEBUG) opserr << "envWithSlope: reloading stiffness is too small." << endln;
             return x0;
         }
         double ym;
         int count = 0;
-        while (count < 2000) {
+        while (count < MAX_ITER) {
             if (DEBUG) opserr << "envWithSlope: iteration x0=" << x0 << " x1=" << x1 << " xm=" << xm << endln;
             xm = x0 - y0 * (x0 - x1) / (y0 - y1);
             ym = envelope(xm) - k;
@@ -694,7 +696,7 @@ double DowelType::envWithSlope(double k, bool flag, double xinit)
             }
             count ++;
         }
-        if (count == 2000) {
+        if (count == MAX_ITER) {
             opserr << "WARNING: too many iterations when solving envelope point with a specific slope. Check the definition." << endln;
         }
     } else if (envType == 3) {
@@ -715,7 +717,7 @@ double DowelType::envWithSlope(double k, bool flag, double xinit)
     return xm;
 }
 
-// Given a x, get the y and k on the reverse pinched path.
+// Given an x, get the y and k on the reverse pinched path.
 void DowelType::getReverseYK(double x, bool flag, double *y, double *k)
 {
     int dt = flag ? 0 : 10;  // index offset for Bezier points
