@@ -64,7 +64,7 @@ OPS_Export void *
 OPS_DowelType()
 {
     if (numDowelType == 0) {
-        opserr << "DowelType v1.02 - Written by Hanlin Dong (self@hanlindong.com) and Xijun Wang";
+        opserr << "DowelType v1.02 - Written by Hanlin Dong (self@hanlindong.com) and Xijun Wang ";
         opserr << "from Tongji University, Copyright 2021 - Use at your Own Peril" << endln;
         numDowelType = 1;
     }
@@ -826,20 +826,19 @@ void DowelType::resetReversePoints(double disp, double force, bool flag)
     // special scenario 1
     bool pinching2env = false;
     // No reloading part: goes from pinching to envelope.
-    if ((flag && cy <= dy && cDmin >= dinter_n) || (!flag && cy >= dy && cDmax <= dinter_p)) {
+    if ((flag && cy <= dy && dx >= envIntersection(mk, my)) || (!flag && cy >= dy && dx <= envIntersection(mk, my))) {
         if (DEBUG) opserr << "pinching scenario 1: no reloading part, goes from pinching to envelope." << endln;
+        double Dcd = cx - dx;
         dx = envIntersection(mk, my);
         dy = envelope(dx);
         dk = mk;
-        cx = dx;
-        cy = dy;
+        cx = 0.;
+        cy = my;
         if ((flag && disp > dyield) || (!flag && disp < -dyield)) {
-            double slope = alpha_r >= 0 ? dmax1 <= dyield ? k01 : k01 * pow(dyield / dmax1, alpha_r):
-                                          dmax0 < DBL_EPSILON ? k01 : k01 * pow(Fdmaxs / dmaxs / k0, -alpha_r);
-            double x = envWithSlope(slope, flag, dx);
+            double x = envIntersection(mk, my) + Dcd;
             dx = x;
             dy = envelope(dx);
-            dk = envType == 3 ? slope : denvelope(dx);
+            dk = denvelope(dx);
             cx = 0.;
             cy = my;
             pinching2env = true;
@@ -850,7 +849,7 @@ void DowelType::resetReversePoints(double disp, double force, bool flag)
     }
     // special scenario 2
     // goes from pinching to the point on the descending part.
-    if ((flag && cy <= dy && cDmin < dinter_n) || (!flag && cy >= dy && cDmax > dinter_p)) {
+    if ((flag && cy <= dy && dx < envIntersection(mk, my)) || (!flag && cy >= dy && dx > envIntersection(mk, my))) {
         if (DEBUG) opserr << "pinching scenario 2: goes from pinching to the point on the descending part" << endln;
         // move pinching line go from unloading end point to target d.
         cx = dx;
@@ -869,7 +868,7 @@ void DowelType::resetReversePoints(double disp, double force, bool flag)
     // special scenario 3
     // BC goes in wrong direction, ignore pinching part. 
     // From unloading to reloading directly.
-    if ((flag && bx < cx) || (!flag && bx > cx)) {
+    if ((flag && bx < cx && bx <= ax) || (!flag && bx > cx && bx >= ax)) {
         if (DEBUG) opserr << "pinching scenario 3: from unloading to reloading directly" << endln;
         // move m, n, b to a
         nx = ax;
@@ -883,16 +882,29 @@ void DowelType::resetReversePoints(double disp, double force, bool flag)
         by = ay;
     }
     // special scenario 4
-    // Unloading goes in wrong direction
-    // go directly towards the reloading point c.
+    // AB goes in wrong direction
+    // go directly towards the reloading point C.
     if ((flag && bx > ax) || (!flag && bx < ax)) {
         if (DEBUG) opserr << "pinching scenario 4: go directly towards the reloading point c" << endln;
         bx = ax;
         by = ay;
-        mk = (cy - ay) / (cx - ax);
-        my = -mk * ax + ay;
-        nx = (bx + cx) / 2;
-        ny = (by + cy) / 2;
+        nx = ax;
+        ny = ay;
+        // AC goes in wrong direction
+        // go directly towards the target point D.
+        if ((flag && (cx > ax)) || (!flag && (cx < ax))) {
+            cx = ax;
+            cy = ay;
+        } 
+        // ignore unloading part.
+        if ((flag && (cx < ax) && (cy > ay)) || (!flag && (cx > ax) && (cy < ay))) {
+            cx = ((ay - mk * ax) - (dy - dk * dx)) / (dk - mk);
+            cy = dk * (cx - dx) + dy;
+            if ((flag && (cx < dx)) || (!flag && (cx > dx))) {
+                cx = ax;
+                cy = ay;
+            }
+        }
     }
     // assign the control points
     int dt = flag ? 0 : 10;
