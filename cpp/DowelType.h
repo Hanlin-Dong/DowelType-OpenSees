@@ -18,8 +18,8 @@
 **                                                                    **
 ** ****************************************************************** */
 
-// $Revision: 1.01 $
-// $Date: 2020/12/07 00:00:00 $
+// $Revision: 1.03 $
+// $Date: 2022/12/13 00:00:00 $
 // Written: Hanlin Dong, Tongji University, self@hanlindong.com
 //
 // Description: This file contains the class definition for DowelType.

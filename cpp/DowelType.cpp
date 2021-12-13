@@ -18,8 +18,8 @@
 **                                                                    **
 ** ****************************************************************** */
 
-// $Revision: 1.02 $
-// $Date: 2020/12/07 00:00:00 $
+// $Revision: 1.03 $
+// $Date: 2022/12/13 00:00:00 $
 // Written: Hanlin Dong, Xijun Wang, Tongji University, self@hanlindong.com
 //
 // Description: This file contains the class definition for DowelType.
@@ -55,12 +55,11 @@
 #define PI 3.14159265358979323846
 #define MAX_ITER 2000
 #define DEBUG false
-
-#define MAT_TAG_DowelType 0
+// #define MAT_TAG_DowelType 0
 
 static int numDowelType = 0;
 
-OPS_Export void *
+void *
 OPS_DowelType()
 {
     if (numDowelType == 0) {
@@ -1234,7 +1233,6 @@ UniaxialMaterial *DowelType::getCopy(void)
 
 int DowelType::sendSelf(int cTag, Channel &theChannel)
 {
-    opserr << "sendself triggered" << endln;
     int res = 0;
     static Vector data(98 + 2 * envSize);
     data(0)  = this->getTag();
@@ -1337,7 +1335,7 @@ int DowelType::recvSelf(int cTag, Channel &theChannel,
                  FEM_ObjectBroker &theBroker)
 {
     int res = 0;
-    static Vector data(31);
+    static Vector data(98 + 2 * envSize);
     res = theChannel.recvVector(this->getDbTag(), cTag, data);
     if (res < 0)
         opserr << "DowelType::recvSelf() - failed to recv data\n";
